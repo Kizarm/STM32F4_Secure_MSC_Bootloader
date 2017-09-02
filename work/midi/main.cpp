@@ -15,7 +15,6 @@ extern "C" const unsigned char score [];
 
 // Efekt je na F4 kolečko led s pwm, jinak rozsviť led
 static Efect blink;
-static MidiPlayer player;
 
 
 // Když dohrajeme, skončí efekt
@@ -24,9 +23,10 @@ void EndPlaying (void) {
 }
 
 int main(void) {
+  MidiPlayer player;
   player.setEnd (EndPlaying);
-  blink .start  (true);
   player.start  (score);    // Hrajeme
+  blink .start  (true);
   // smycka je platforme zavisla, v mcu muze byt prazdna
   while (PlatformMainLoop());
   return 0;

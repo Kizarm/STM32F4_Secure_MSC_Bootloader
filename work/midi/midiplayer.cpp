@@ -48,7 +48,6 @@ int16_t MidiPlayer::nextSample (void) {
 /// Konstruktor
 MidiPlayer::MidiPlayer() {
   MidiPlayerInstance = this;
-  // dac.SetVolume (245);
   dac.IrqEnable (true);
   soft.Config ();
   func = 0;
