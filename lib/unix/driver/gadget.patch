@@ -1,0 +1,24 @@
+diff -Naur ./orig/dummy_hcd.c ./used/dummy_hcd.c
+--- ./orig/dummy_hcd.c	2017-03-15 02:57:56.000000000 +0100
++++ ./used/dummy_hcd.c	2017-09-01 18:42:10.000000000 +0200
+@@ -68,7 +68,7 @@
+ 
+ static struct dummy_hcd_module_parameters mod_data = {
+ 	.is_super_speed = false,
+-	.is_high_speed = true,
++	.is_high_speed  = false,
+ 	.num = 1,
+ };
+ module_param_named(is_super_speed, mod_data.is_super_speed, bool, S_IRUGO);
+diff -Naur ./orig/inode.c ./used/inode.c
+--- ./orig/inode.c	2017-03-15 02:57:56.000000000 +0100
++++ ./used/inode.c	2017-09-01 18:58:56.000000000 +0200
+@@ -605,7 +605,7 @@
+ 	}
+ 	if (is_sync_kiocb(iocb)) {
+ 		value = ep_io(epdata, buf, len);
+-		if (value >= 0 && copy_to_iter(buf, value, to))
++		if (value >= 0 && (copy_to_iter(buf, value, to) != value))
+ 			value = -EFAULT;
+ 	} else {
+ 		struct kiocb_priv *priv = kzalloc(sizeof *priv, GFP_KERNEL);
