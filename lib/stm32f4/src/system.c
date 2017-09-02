@@ -239,6 +239,10 @@ void SystemInit (void) {
 
 }
 
+void UserSystemInit (void) {
+  /* Configure the Vector Table location add offset address ------------------*/
+  SCB->VTOR = (uint32_t) &_vect_tab_begin; /* Vector Table Relocation in SRAM/FLASH */
+}
 /**
    * @brief  Update SystemCoreClock variable according to Clock Register Values.
   *         The SystemCoreClock variable contains the core clock (HCLK), it can

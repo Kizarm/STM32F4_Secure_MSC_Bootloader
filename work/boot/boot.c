@@ -260,11 +260,12 @@ void Reset_Handler (void) {
   while (dst < end) *dst++ = *src++;
 
   SystemInit();
+  if (!check_user())
+    jump_to_firmware();             // skok do uživatelského firmware
   SystemCoreClockUpdate();          // Potřebné pro USART
   static_init();                    // Zde zavolám globální konstruktory
 
-  if (check_user()) main();   // zůstanu v bootloaderu
-  else  jump_to_firmware();   // skok do uživatelského firmware
+  main();
 
   for (;;);
 }

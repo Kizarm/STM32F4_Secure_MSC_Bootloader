@@ -12,8 +12,6 @@ extern "C" uint8_t     * user_code_begin; // from jump.s
 
 unsigned long image_size=0;
 
-static GpioClass butt (GpioPortA,  0, GPIO_Mode_IN);
-
 static bool UserCheck (void) {
   image_size = 0;
   UserDescriptor * ud = reinterpret_cast<UserDescriptor*>(user_code_begin + DescriptorOffset);
@@ -28,6 +26,7 @@ static bool UserCheck (void) {
 }
 /* C++ button needed */
 extern "C" uint32_t check_user (void) {
+  GpioClass butt (GpioPortA,  0, GPIO_Mode_IN);
   UserCheck (); // nastaveni image_size
   if (butt.get())  return 1;
   if (!image_size) return 1;

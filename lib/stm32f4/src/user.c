@@ -131,7 +131,7 @@ extern "C" {
 
 
   extern int main (void);
-  extern void SystemInit (void);
+  extern void UserSystemInit (void);
 
 #if defined (__cplusplus)
 } // extern "C"
@@ -258,7 +258,7 @@ void Reset_Handler (void) {
   end = &_edata;
   while (dst < end) *dst++ = *src++;
 
-  SystemInit();
+  UserSystemInit();
   SystemCoreClockUpdate();          // Potřebné pro USART
   static_init();                    // Zde zavolám globální konstruktory
 
