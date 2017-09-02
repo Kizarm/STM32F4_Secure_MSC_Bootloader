@@ -113,13 +113,15 @@ bool ContextServer::sendImage (int sockfd, const char * name) {
   
   encrypt_block (image, filesize, GeneratedKeys.loader);
   
-  send (sockfd, page_200, strlen(page_200), 0);
+  unsigned xlen = 1024;
+  char xbuf [xlen];
+  int  xres = snprintf (xbuf, xlen, "HTTP/1.0 200 OK\nContent-Type: application/binary\nContent-Length: %d\n\r\n", filesize);
+  send (sockfd, xbuf, xres, 0);
   
   unsigned chunk = BYTES, start = 0, lenght = filesize;
   while (lenght) {
     if (chunk > lenght) chunk = lenght;
     res = write (sockfd, image + start, chunk);
-    // printf("write %d, rem=%d, res=%d\n", chunk, lenght, res);
     if (!res) {
       fprintf (stderr, "No send data: %d\n", res);
       break;
