@@ -33,7 +33,9 @@ Pak už je to zhruba stejné (testováno na UBUNTU 16.04)
 9. provedeme příkazy (za $USER si dosaďte to co vypíše příkaz "echo $USER")
 
    cp ~/Downloads/FIRMWARE.BIN /media/$USER/BOOTLOADER
+
    umount /media/$USER/BOOTLOADER
+
 10.odpojíme od USB a po resetu by to mělo hrát a svítit.
 
 Co se tam vlastně děje je trochu popsáno pokud si v adresáři http vygenerujete dokumentaci
