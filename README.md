@@ -5,7 +5,7 @@ i pro LPC11U24/34 a dokonce i emulace na Linuxu. Emulace na Linuxu je zajímavá
 a velmi užitečná pro ladění, ale vyžaduje jádrové moduly, které jsou z hlediska 
 jaderného vývoje poněkud opomíjené a bývají v nich chyby. V distribucích jako 
 je Ubuntu klíčový modul dummy_hcd dokonce chybí. Lze to zprovoznit, ale chce 
-to trochu zkošenost. Co se týká NXP procesorů s jádrem Cortex-M0, je to zde 
+to trochu zkušenost. Co se týká NXP procesorů s jádrem Cortex-M0, je to zde 
 vynecháno, protože je to zbytečné - u tohoto jádra nejde přehodit adresu tabulky 
 vektorů na zvolenou stránku, což je základ tohoto typu bootloaderu. Pro Cortex-M3 
 např. LPC1343/47 by to asi šlo udělat (jato podobné LPC11U..), ale nemám to jak vyzkoušet. 
