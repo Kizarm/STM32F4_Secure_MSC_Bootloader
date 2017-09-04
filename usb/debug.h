@@ -12,11 +12,13 @@ Ve firmware jsou zakázány.
 #define dbg()
 #define print(fmt,args...)
 #define error(fmt,args...)
+#define debug(...)
 #else
 #include <stdio.h>
 #define dbg() printf("\t%s\n",__func__)
 #define print(fmt,args...)  printf("\t%s: "fmt,__func__, ## args)
 #define error(fmt,args...) fprintf(stderr,"! %s: "fmt,__func__, ## args)
+#define debug printf
 #endif
 
 

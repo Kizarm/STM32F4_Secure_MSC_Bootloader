@@ -20,7 +20,7 @@ ImageWriter::ImageWriter() {
 
 }
 void ImageWriter::eraseBlocks (uint32_t from, uint32_t len) {
-  //if (from) return  // nepredpokladame zacatek jinde
+  if (from) return;  // zacatek by nemel byt jinde
   FLASHClass::Unlock();
   unsigned max, ers = 0;
   for (unsigned k=1; k<maxsectors; k++) {   // zaciname od 1

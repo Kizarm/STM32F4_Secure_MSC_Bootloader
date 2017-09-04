@@ -13,6 +13,7 @@ class Fat12Emul : public StorageBase {
     void CmdRead      (uint32_t offset, uint32_t lenght);
     uint32_t GetCapacity (void);
     void Prepare  (void);
+    void Save (const char * name);
   protected:
     void systRead     (uint8_t * buf, uint32_t len);
     void zeroRead     (uint8_t * buf, uint32_t len);
@@ -31,10 +32,11 @@ class Fat12Emul : public StorageBase {
     uint32_t       rwlen;            //!< délka
     uint32_t       pt0, pt1, pt2;    //!< záchytné body
     uint32_t       write_size;
+    uint32_t       full_size;
     
     struct {    // 2 KiB data
       uint8_t boot [512];   //!< boot sector
-      uint8_t fat  [512];   //!< FAT tables block
+      uint8_t fat  [512*2]; //!< FAT tables block
       uint8_t dir  [512];   //!< DIRECTORY  block
       uint8_t data [512];   //!< pro univerzalni pouziti (boot, data)
     } IO;

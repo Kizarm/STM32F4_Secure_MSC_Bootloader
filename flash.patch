@@ -1,6 +1,6 @@
 diff -Naur ./mscload_ram/lib/stm32f4/boot.inc ./mscload_flash/lib/stm32f4/boot.inc
 --- ./mscload_ram/lib/stm32f4/boot.inc	2017-09-02 20:04:50.000000000 +0200
-+++ ./mscload_flash/lib/stm32f4/boot.inc	2017-09-02 20:56:36.188826447 +0200
++++ ./mscload_flash/lib/stm32f4/boot.inc	2017-09-04 19:18:29.413481356 +0200
 @@ -8,7 +8,7 @@
  VPATH += $(ROOT_PATH)/lib/$(TARGET)/src
  
@@ -12,7 +12,7 @@ diff -Naur ./mscload_ram/lib/stm32f4/boot.inc ./mscload_flash/lib/stm32f4/boot.i
  OBJM += boot.o
 diff -Naur ./mscload_ram/lib/stm32f4/user.inc ./mscload_flash/lib/stm32f4/user.inc
 --- ./mscload_ram/lib/stm32f4/user.inc	2017-09-02 20:04:50.000000000 +0200
-+++ ./mscload_flash/lib/stm32f4/user.inc	2017-09-02 20:56:36.188826447 +0200
++++ ./mscload_flash/lib/stm32f4/user.inc	2017-09-04 19:18:29.413481356 +0200
 @@ -6,7 +6,7 @@
  VPATH += $(ROOT_PATH)/lib/$(TARGET)/src
  
@@ -24,7 +24,7 @@ diff -Naur ./mscload_ram/lib/stm32f4/user.inc ./mscload_flash/lib/stm32f4/user.i
  OBJM  = user.o
 diff -Naur ./mscload_ram/work/boot/boot.c ./mscload_flash/work/boot/boot.c
 --- ./mscload_ram/work/boot/boot.c	2017-09-02 20:41:31.000000000 +0200
-+++ ./mscload_flash/work/boot/boot.c	2017-09-02 20:56:36.188826447 +0200
++++ ./mscload_flash/work/boot/boot.c	2017-09-04 19:18:29.413481356 +0200
 @@ -245,6 +245,8 @@
  extern uint32_t check_user   (void);
  extern void jump_to_firmware (void);
@@ -45,20 +45,20 @@ diff -Naur ./mscload_ram/work/boot/boot.c ./mscload_flash/work/boot/boot.c
    if (!check_user())
      jump_to_firmware();             // skok do uživatelského firmware
 diff -Naur ./mscload_ram/work/boot/fat12emul.cpp ./mscload_flash/work/boot/fat12emul.cpp
---- ./mscload_ram/work/boot/fat12emul.cpp	2017-09-02 20:04:50.000000000 +0200
-+++ ./mscload_flash/work/boot/fat12emul.cpp	2017-09-02 20:56:36.188826447 +0200
-@@ -40,7 +40,7 @@
+--- ./mscload_ram/work/boot/fat12emul.cpp	2017-09-04 18:30:34.000000000 +0200
++++ ./mscload_flash/work/boot/fat12emul.cpp	2017-09-04 19:19:51.540226027 +0200
+@@ -52,7 +52,7 @@
      .Reserved_Logical_Sectors    = 1,
      .Number_Of_FATs              = 1,
      .Maximum_Directory_Entries   = 16,
 -    .Total_Logical_Sectors       = 128, 
-+    .Total_Logical_Sectors       = 640,       // max. 320KiB, dal jen zvetsit cluster
++    .Total_Logical_Sectors       = 1280,      // max. 640Kib, dale jen zvetsit cluster
      .Media_Descriptor            = 0xF8,
-     .Logical_Sectors_Per_FAT     = 1
+     .Logical_Sectors_Per_FAT     = 2
    }
 diff -Naur ./mscload_ram/work/boot/Makefile ./mscload_flash/work/boot/Makefile
 --- ./mscload_ram/work/boot/Makefile	2017-09-02 20:04:50.000000000 +0200
-+++ ./mscload_flash/work/boot/Makefile	2017-09-02 20:56:36.188826447 +0200
++++ ./mscload_flash/work/boot/Makefile	2017-09-04 19:18:29.413481356 +0200
 @@ -27,7 +27,8 @@
  
  OBJS+= gpio.o
@@ -71,7 +71,7 @@ diff -Naur ./mscload_ram/work/boot/Makefile ./mscload_flash/work/boot/Makefile
  OBJS+= checks.o
 diff -Naur ./mscload_ram/work/post/main.cpp ./mscload_flash/work/post/main.cpp
 --- ./mscload_ram/work/post/main.cpp	2017-09-02 20:04:50.000000000 +0200
-+++ ./mscload_flash/work/post/main.cpp	2017-09-02 20:56:36.188826447 +0200
++++ ./mscload_flash/work/post/main.cpp	2017-09-04 19:18:29.413481356 +0200
 @@ -73,9 +73,11 @@
    if (sb != sf) {
      fprintf (stderr, SRED"ERROR: Firmware musi zacinat na %08X, ale zacina na %08X !!!\n"

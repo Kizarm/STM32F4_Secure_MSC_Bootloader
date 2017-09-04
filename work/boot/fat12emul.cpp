@@ -1,7 +1,19 @@
-#include <stdio.h>
 #include <string.h>
+#include "debug.h"
 #include "msclass.h"
 #include "fat12emul.h"
+
+/** NXP bootloader používá zřejmě fintu - disk se zdá být plný, tj. firmware.bin zabírá
+ * jakoby všechno volné místo. To nutí operační systém (OS) aby data přepsal, nemůže je
+ * prostě dát na volné místo protože žádné nemá. To je zřejmě příčina, proč to ve Windows
+ * funguje. V Linuxu cp opět funguje, přetažení selže, ale pokud před přetažením soubor
+ * FIRMWARE.BIN z disku smažeme, funguje to. Problém je, že při případném čtení souboru
+ * z disku se zdá být tento velký a načteme moc dat, která k ničemu nejsou. Ovšem tuto
+ * drobnou vadu má i bootloader NXP (a zřejmě všechny podobné). Tak si vyber.
+ * 
+ * */
+#define  NXP_LIKE
+//#undef NXP_LIKE
 
 /** ***********************************************************************/
 extern "C" const char          index_ctxt []; // in context.s
@@ -26,9 +38,9 @@ struct BootSect {
   uint8_t   jump                  [3];
   uint8_t   OEM_Name              [8];
   struct BIOS_Parameter_Block BPB;        // 19 -> 30
-//  uint8_t   Boot_Code             [479];
-//  uint8_t   Physical_Drive_Number; // 0
-//  uint16_t  Boot_Sector_Signature; // dame na konec
+//uint8_t   Boot_Code             [479];
+//uint8_t   Physical_Drive_Number; // 0
+//uint16_t  Boot_Sector_Signature; // dame na konec
 }__attribute__((packed));
 static const uint16_t Valid_Boot_Sector_Signature = 0xAA55;
 static const BootSect BootSector = {
@@ -42,7 +54,7 @@ static const BootSect BootSector = {
     .Maximum_Directory_Entries   = 16,
     .Total_Logical_Sectors       = 128, 
     .Media_Descriptor            = 0xF8,
-    .Logical_Sectors_Per_FAT     = 1
+    .Logical_Sectors_Per_FAT     = 2
   }
 };
 /** ***********************************************************************/
@@ -123,11 +135,10 @@ static const DirectoryEntry DirEntries [] = {
   {.EntryByte = { 0x41, 0x69, 0x00, 0x6E, 0x00, 0x64, 0x00, 0x65, 0x00, 0x78, 0x00, 0x0F, 0x00, 0x33, 0x2E, 0x00,
                   0x68, 0x00, 0x74, 0x00, 0x6D, 0x00, 0x6C, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF }},
   {.EntryByte = { 0x49, 0x4E, 0x44, 0x45, 0x58, 0x7E, 0x31, 0x20, 0x48, 0x54, 0x4D, 0x21, 0x00, 0x64, 0xF5, 0x7B,
-                  0x17, 0x4B, 0x17, 0x4B, 0x00, 0x00, 0xF5, 0x7B, 0x17, 0x4B, 0x03, 0x00, 0x90, 0x01, 0x00, 0x00 }},
+                  0x17, 0x4B, 0x17, 0x4B, 0x00, 0x00, 0xF5, 0x7B, 0x17, 0x4B, 0x02, 0x00, 0x90, 0x01, 0x00, 0x00 }},
   {.EntryByte = { 0x46, 0x49, 0x52, 0x4D, 0x57, 0x41, 0x52, 0x45, 0x42, 0x49, 0x4E, 0x20, 0x00, 0x64, 0xF5, 0x7B,
-                  0x17, 0x4B, 0x17, 0x4B, 0x00, 0x00, 0xF5, 0x7B, 0x17, 0x4B, 0x04, 0x00, 0x00, 0x80, 0x00, 0x00 }}
+                  0x17, 0x4B, 0x17, 0x4B, 0x00, 0x00, 0xF5, 0x7B, 0x17, 0x4B, 0x03, 0x00, 0x00, 0x80, 0x00, 0x00 }}
 };
-//static const unsigned image_data_start = 7u;
 /** ***********************************************************************/
 #include "keys.h"
 static uint32_t toHex (uint8_t * p, uint32_t n) {
@@ -141,20 +152,62 @@ static uint32_t toHex (uint8_t * p, uint32_t n) {
   return w;
 }
 /** ***********************************************************************/
+#ifdef __arm__
+static inline void printerr (const unsigned char * o, const unsigned char * n, unsigned len, unsigned ofs) {};
+#else  //  __arm__
+static void check_chunk (const unsigned char * o, const unsigned char * n, unsigned len, unsigned no) {
+  unsigned errcnt = 0;
+  char sign [len];
+  memset (sign, 0, len);
+  for (unsigned i=0; i<len; i++) {
+    if (o[i] != n[i]) {
+      errcnt += 1;
+      sign[i] = 1;
+    }
+  }
+  if (errcnt) {
+    printf ("0x%04X:", no);
+    for (unsigned i=0; i<len; i++) {
+      if (sign[i]) printf ("\x1B[34;1m %02X\x1b[0m", o[i]);
+      else         printf ("\x1B[32;1m %02X\x1b[0m", o[i]);
+    }
+    printf ("\n       ");
+    for (unsigned i=0; i<len; i++) {
+      if (sign[i]) printf ("\x1B[31;1m %02X\x1b[0m", n[i]);
+      else         printf ("   ");
+    }
+    printf("\n");
+  }
+}
+static void printerr (const unsigned char * o, const unsigned char * n, unsigned len, unsigned ofs) {
+  const unsigned chunk_size = 32;
+  unsigned index=ofs, count=0, step=chunk_size;
+  while (len) {
+    if (len < step) step = len;
+    check_chunk (o + count, n + count, step, index);
+    index += step;
+    len   -= step;
+    count += step;
+  }
+}
+#endif //  __arm__
+/** ***********************************************************************/
 
 Fat12Emul::Fat12Emul () : StorageBase(), memory(), block (BootSector.BPB.Bytes_Per_Logical_Sector) {
   rwlen = 0u;
   rwofs = 0u;
   capacity = BootSector.BPB.Total_Logical_Sectors;
-  
-  //Prepare();
+  write_size = full_size = 0u;
+  pt0 = pt1 = pt2 = 0u;
 }
 
 void Fat12Emul::CmdRead (uint32_t offset, uint32_t lenght) {
+  debug ("CmdRead  from %3d - > %d blocks\n", offset, lenght);
   rwofs = offset * block;
   rwlen = lenght * block;
 }
 void Fat12Emul::CmdWrite (uint32_t offset, uint32_t lenght) {
+  debug ("CmdWrite from %3d - > %d blocks\n", offset, lenght);
   rwofs = offset * block;
   rwlen = lenght * block;
   // prepare flash for write
@@ -164,11 +217,9 @@ void Fat12Emul::CmdWrite (uint32_t offset, uint32_t lenght) {
     erase += start;
     start  = 0;
   }
-  //printf ("CmdWrite : from=%d, len=%d sects\n", offset, lenght);
   if (erase > 0) {
     memory.eraseBlocks (start, erase);
     write_size = erase * block;
-    //printf ("start = %d, erase = %d\n", start, erase);
   }
 }
 uint32_t Fat12Emul::GetCapacity (void) {
@@ -176,53 +227,8 @@ uint32_t Fat12Emul::GetCapacity (void) {
 }
 void Fat12Emul::Prepare (void) {
   memset (&IO.boot, 0, block << 2);   // 4 bloky
-  // BootSector
-  memcpy (&IO.boot, &BootSector, sizeof(BootSect));
-  uint16_t * p = reinterpret_cast<uint16_t*>(&IO.boot);
-  p  [255] = Valid_Boot_Sector_Signature;
-  // FAT
-  two_fat_entry12 * entries = reinterpret_cast<two_fat_entry12*>(&IO.fat);
-  unsigned n = 0;
-  write_fat_entry_n (entries, n++, 0xFF8);
-  write_fat_entry_n (entries, n++, 0xFFF);
-  write_fat_entry_n (entries, n++, 0x000);
-  write_fat_entry_n (entries, n++, 0xFFF);      // entry for index.html
-  unsigned max, i;
-  const unsigned cluster_size = BootSector.BPB.Logical_Sectors_Per_Cluster * block;
-  const unsigned cluster_mask = cluster_size - 1;
-  max = image_size / cluster_size;                       // cluster = 2 * block
-  if (image_size & cluster_mask) max += 1;  
-  if (max) {
-    for (i=0; i<max-1; i++) {
-      write_fat_entry_n (entries, n, n+1);
-      n++;
-    }
-    write_fat_entry_n (entries, n++, 0xFFF);
-  }
-  /*
-  for (i=0; i<n; i++) {
-    printf ("%03X\n", read_fat_entry_n (entries, i));
-  }
-  */
-  // DIR
-  DirectoryEntry  * dirent  = reinterpret_cast<DirectoryEntry*>(&IO.dir);
+  DirectoryEntry * const dirent  = reinterpret_cast<DirectoryEntry*>(&IO.dir);
   memcpy (dirent, DirEntries, 4 * sizeof(DirectoryEntry));
-  //printf ("File Size %d=%ld\n", dirent[2].f.File_Size, index_size + 31);
-  dirent[2].f.File_Size = index_size + 31;       // set size index.html
-  dirent[3].f.File_Size = image_size;
-  // index.html
-//memcpy (&IO.data, file_ctxt, file_size);
-  unsigned m = 0;
-  for (n=0; n<index_size; n++) {
-    char c = index_ctxt [n];
-    if (c == '%') {
-      for (i=0; i<TEA_KEY_SIZE; i++) {
-        m += toHex (IO.data + m, GeneratedKeys.server[i]);
-      }
-    } else {
-      IO.data [m++] = c;
-    }
-  }
   
   uint32_t offset = BootSector.BPB.Reserved_Logical_Sectors;   // zacatek = 1. sektor
   offset += BootSector.BPB.Logical_Sectors_Per_FAT;
@@ -234,19 +240,72 @@ void Fat12Emul::Prepare (void) {
   uint32_t ClusterSize = BootSector.BPB.Logical_Sectors_Per_Cluster;
   pt1 = (dirent[2].f.First_Logical_Cluster - 2) * ClusterSize + pt0;
   pt2 = (dirent[3].f.First_Logical_Cluster - 2) * ClusterSize + pt0;
-  //printf ("Start at %d, Index at %d, Image at %d\n", pt0, pt1, pt2);
+  full_size = ((BootSector.BPB.Total_Logical_Sectors - pt2) & ~(BootSector.BPB.Logical_Sectors_Per_Cluster-1)) * block;
+  debug ("Start at %d, Index at %d, Image at %d (blocks), full_size=%dB\n", pt0, pt1, pt2, full_size);
+  
+  // BootSector
+  memcpy (&IO.boot, &BootSector, sizeof(BootSect));
+  uint16_t * p = reinterpret_cast<uint16_t*>(&IO.boot);
+  p  [255] = Valid_Boot_Sector_Signature;
+  // FAT
+  two_fat_entry12 * entries = reinterpret_cast<two_fat_entry12*>(&IO.fat);
+  unsigned n = 0;
+  write_fat_entry_n (entries, n++, 0xFF8);
+  write_fat_entry_n (entries, n++, 0xFFF);
+  write_fat_entry_n (entries, n++, 0xFFF);      // entry for index.html
+  unsigned i, max;
+  const unsigned cluster_size = BootSector.BPB.Logical_Sectors_Per_Cluster * block;
+#ifdef NXP_LIKE
+  max = full_size / cluster_size;                        // cluster = 2 * block
+#else  // NXP_LIKE
+  const unsigned cluster_mask = cluster_size - 1;
+  max = image_size / cluster_size;                       // cluster = 2 * block
+  if (image_size & cluster_mask) max += 1;  
+#endif // NXP_LIKE
+  if (max) {
+    for (i=0; i<max-1; i++) {
+      write_fat_entry_n (entries, n, n+1);
+      n++;
+    }
+    write_fat_entry_n (entries, n++, 0xFFF);
+  }
+  
+  for (i=0; i<n; i++) {
+    debug ("%03X\n", read_fat_entry_n (entries, i));
+  }
+  debug ("Cluster begin index=%d, boot=%d\n",
+         dirent[2].f.First_Logical_Cluster, dirent[3].f.First_Logical_Cluster);
+  // DIR
+  dirent[2].f.File_Size = index_size + 31;       // set size index.html
+#ifdef NXP_LIKE
+  dirent[3].f.File_Size = full_size;
+#else  // NXP_LIKE
+  dirent[3].f.File_Size = image_size;
+#endif // NXP_LIKE
+  // index.html
+  unsigned m = 0;
+  for (n=0; n<index_size; n++) {
+    char c = index_ctxt [n];
+    if (c == '%') {
+      for (i=0; i<TEA_KEY_SIZE; i++) {
+        m += toHex (IO.data + m, GeneratedKeys.server[i]);
+      }
+    } else {
+      IO.data [m++] = c;
+    }
+  }
 }
 mmcIOStates Fat12Emul::Read (uint8_t * buf, uint32_t len) {
-  const uint32_t tag = rwofs >> 9;   // blok no.
-  if         (tag < pt0) {          // 0 .. 2
+  const uint32_t tag = rwofs >> 9;  // blok no.
+  if         (tag < pt0) {          // 0 .. 3
     systRead (buf, len);
-  } else if  (tag < pt1) {          // 3 .. 4
+  } else if  (tag < pt1) {          // nic, ale muze byt jinak
     zeroRead (buf, len);
-  } else if  (tag < (pt1+1)) {      // 5 (index.html ma jen 1 blok)
+  } else if  (tag < (pt1+1)) {      // 4 (index.html ma jen 1 blok)
     indxRead (buf, len);
-  } else if  (tag < pt2) {          // 6
+  } else if  (tag < pt2) {          // 5
     zeroRead (buf, len);
-  } else {                          // >= 7 (7 * 512 = 0xE00) data image
+  } else {                          // >= 6 (7 * 512 = 0xE00) data image
     fileRead (buf, len);
   }
   rwofs += len;
@@ -272,7 +331,7 @@ void Fat12Emul::fileRead (uint8_t * buf, uint32_t len) {
   uint32_t ofs = rwofs - (pt2 * block);
   if (ofs < image_size) {
     // TODO: zpresnit, kopiruje i kousek dal za konec souboru (asi nevadi)
-    // printf ("offset=%d, len=%d\n", ofs, len);
+    // debug ("offset=%d, len=%d\n", ofs, len);
     memory.readBytes (buf, ofs, len);
   } else {
     memset (buf, 0, len);
@@ -280,16 +339,16 @@ void Fat12Emul::fileRead (uint8_t * buf, uint32_t len) {
 }
 
 mmcIOStates Fat12Emul::Write (uint8_t * buf, uint32_t len) {
-  const uint32_t tag = rwofs >> 9;   // blok no.
-  if         (tag < pt0) {          // 0 .. 2
+  const uint32_t tag = rwofs >> 9;  // blok no.
+  if         (tag < pt0) {
     systWrite (buf, len);
-  } else if  (tag < pt1) {          // 3 .. 4
+  } else if  (tag < pt1) {
     zeroWrite (buf, len);
-  } else if  (tag < (pt1+1)) {      // 5 (index.html ma jen 1 blok)
+  } else if  (tag < (pt1+1)) {
     indxWrite (buf, len);
-  } else if  (tag < pt2) {          // 6
+  } else if  (tag < pt2) {
     zeroWrite (buf, len);
-  } else {                          // >= 7 (7 * 512 = 0xE00) data image
+  } else {
     fileWrite (buf, len);
   }
   rwofs += len;
@@ -305,6 +364,7 @@ void Fat12Emul::zeroWrite (uint8_t* buf, uint32_t len) {
 }
 void Fat12Emul::systWrite (uint8_t* buf, uint32_t len) {
   uint32_t ofs = rwofs;
+  printerr (IO.boot + ofs, buf, len, ofs);
   memcpy (IO.boot + ofs, buf, len);
 }
 void Fat12Emul::indxWrite (uint8_t* buf, uint32_t len) {
@@ -315,7 +375,21 @@ void Fat12Emul::fileWrite (uint8_t* buf, uint32_t len) {
   uint32_t ofs = rwofs - (pt2 * block);
   if (ofs < write_size) {
     // TODO: zpresnit, kopiruje i kousek dal za konec souboru (asi nevadi)
-    // printf ("offset=%d, len=%d\n", ofs, len);
+    debug ("fileWrite -> offset=%d, len=%d\r", ofs, len);
     memory.writeBytes (buf, ofs, len);
   }
 }
+#ifdef __arm__
+void Fat12Emul::Save (const char * name) {};
+#else  // __arm__
+void Fat12Emul::Save (const char * name) {
+  DirectoryEntry  * dirent  = reinterpret_cast<DirectoryEntry*>(&IO.dir);
+  uint32_t len = dirent[3].f.File_Size;
+  debug ("Save FILE %s (%d bytes)\n", name, len);
+  FILE * out = fopen (name, "w");
+  if (!out) return;
+  size_t res = fwrite (image_ctxt, 1, len, out);
+  (void) res;
+  fclose (out);
+}
+#endif // __arm__
