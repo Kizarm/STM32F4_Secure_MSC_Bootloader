@@ -24,6 +24,7 @@ struct UUID {
 /// Zaplaceno ...
 static const UUID payed [] = {  // UUID z STM32F4 (3*4 byte) + Flash size (4 byte)
   {0x001e0027, 0x33314718, 0x35373532, 0x00000400},
+  {0x001e0027, 0x33314718, 0x35373532, 0x00000000},  // Linux test, zmena 1 bitu
 };
 /** ********************************************************************************/
 static UUID cuid;
