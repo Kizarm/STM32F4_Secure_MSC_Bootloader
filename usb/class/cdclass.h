@@ -272,7 +272,7 @@ class CdClass : public UsbClass, public BaseLayer {
     uint8_t           txBuf [USB_MAX_NON_ISO_SIZE];
     volatile uint32_t usbtx_rdy;     //!< semafor pro čekání na kompletní výstup dat
     volatile uint32_t send_enable;   //!< je dobre blokovat data dokud neni DTR==1
-    Fifo<char>        tx;
+    Fifo<64, char>    tx;
     
 /** ************************************/
 #ifdef DSCBLD

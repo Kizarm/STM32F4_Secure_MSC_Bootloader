@@ -12,10 +12,15 @@ extern "C" {
   // __ARM_ARCH_xM__ je predefined macro překladače pro Cortex-M0,M1,M3,M4
   #if __ARM_ARCH_6M__ | __ARM_ARCH_7M__ | __ARM_ARCH_7EM__
   //! [ARM locker]
+    extern volatile int gblMutex;
+    /// Rozšíření pro opakovaný (resp. vnořený) lock / unlock (např. zamčení celého paketu)
     static inline void Lock (void) {
       asm volatile ("cpsid i");
+      gblMutex++;
     }
+    /// Rozšíření pro opakovaný (resp. vnořený) lock / unlock (např. zamčení celého paketu)
     static inline void UnLock (void) {
+      if (--gblMutex) return;
       asm volatile ("cpsie i");
     }
   //! [ARM locker]

@@ -12,7 +12,7 @@
   * @retval 0 (none)
   */
 extern "C" const unsigned char score [];
-
+volatile int gblMutex = 0;
 // Efekt je na F4 kolečko led s pwm, jinak rozsviť led
 static Efect blink;
 

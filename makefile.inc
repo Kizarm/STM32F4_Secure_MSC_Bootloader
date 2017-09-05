@@ -73,7 +73,7 @@ $(BLD)%.o : %.cpp
 $(BLD)%.o : %.s
 	$(AS) $(ASFLAGS) -o $@ $<
 
-$(OUTFILE).elf: $(BOBJS)
+$(OUTFILE).elf: $(BOBJS) $(EXLIB)
 	$(CXX) $(LDFLAGS) -o $(OUTFILE).elf $(BOBJS) $(LDLIBS)
 	-@echo ""
 	$(SIZE) $(OUTFILE).elf

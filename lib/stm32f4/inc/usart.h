@@ -61,7 +61,7 @@ class UsartClass : public BaseLayer {
   private:
     USART_Type_s* const  port; //!< Adresa registrů
     uint32_t      const  uno;  //!< číslo usartu (fakticky UsartEnum no)
-    Fifo<char>           tx;   //!< Zajišťuje, že metoda Down neblokuje program
+    Fifo<64, char>       tx;   //!< Zajišťuje, že metoda Down neblokuje program
 };
 
 #endif // USARTCLASS_H
