@@ -17,5 +17,6 @@ int main (void) {
     // Tohle je fakticky zbytečné, nutné pouze pro unix emulaci.
     if (usb.MainLoop()) break;
   }
+  img.Save("firmware.bin");
   return 0;
 }

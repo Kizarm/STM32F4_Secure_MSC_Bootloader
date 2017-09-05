@@ -271,9 +271,9 @@ void Fat12Emul::Prepare (void) {
   }
   
   for (i=0; i<n; i++) {
-    debug ("%03X\n", read_fat_entry_n (entries, i));
+    debug ("%03X-%03X ", i, read_fat_entry_n (entries, i));
   }
-  debug ("Cluster begin index=%d, boot=%d\n",
+  debug ("\nCluster begin index=%d, boot=%d\n",
          dirent[2].f.First_Logical_Cluster, dirent[3].f.First_Logical_Cluster);
   // DIR
   dirent[2].f.File_Size = index_size + 31;       // set size index.html

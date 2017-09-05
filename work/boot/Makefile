@@ -1,7 +1,8 @@
 ##########################################################################
 # User configuration and firmware specific object files	
 ##########################################################################
-TARGET    = stm32f4
+#TARGET    = unix
+ TARGET    = stm32f4
 
 BLD       = ./obj/
 ROOT_PATH = ../..
@@ -28,12 +29,15 @@ OBJS+= usbendpoint.o
 OBJS+= gpio.o
 OBJS+= fat12emul.o
 OBJS+= imagewriter.o
+OBJS+= keys.o
+OBJS+= tea.o
+ifeq ($(TARGET),unix)
+OBJS+= unictxt.o
+else
 OBJS+= jump.o
 OBJS+= context.o
 OBJS+= checks.o
-OBJS+= keys.o
-OBJS+= tea.o
-
+endif
 OBJS+= msclass.o
 
 # COMMON
