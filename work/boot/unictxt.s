@@ -14,7 +14,7 @@ image_ctxt:
   .incbin "./fil/FIRMWARE.BIN"
 image_end:
   .word 0
-  .space 65535, 0  /* vypln pro cely disk */
+  .space 655360, 0  /* vypln pro cely disk */
   .word 0
 
   .section .rodata.sizes

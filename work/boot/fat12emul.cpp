@@ -52,7 +52,7 @@ static const BootSect BootSector = {
     .Reserved_Logical_Sectors    = 1,
     .Number_Of_FATs              = 1,
     .Maximum_Directory_Entries   = 16,
-    .Total_Logical_Sectors       = 128, 
+    .Total_Logical_Sectors       = 128,
     .Media_Descriptor            = 0xF8,
     .Logical_Sectors_Per_FAT     = 2
   }
@@ -202,12 +202,12 @@ Fat12Emul::Fat12Emul () : StorageBase(), memory(), block (BootSector.BPB.Bytes_P
 }
 
 void Fat12Emul::CmdRead (uint32_t offset, uint32_t lenght) {
-  debug ("CmdRead  from %3d - > %d blocks\n", offset, lenght);
+  debug ("CmdRead  from %3d -> %d blocks    \n", offset, lenght);
   rwofs = offset * block;
   rwlen = lenght * block;
 }
 void Fat12Emul::CmdWrite (uint32_t offset, uint32_t lenght) {
-  debug ("CmdWrite from %3d - > %d blocks\n", offset, lenght);
+  debug ("CmdWrite from %3d -> %d blocks    \n", offset, lenght);
   rwofs = offset * block;
   rwlen = lenght * block;
   // prepare flash for write
@@ -373,11 +373,11 @@ void Fat12Emul::indxWrite (uint8_t* buf, uint32_t len) {
 }
 void Fat12Emul::fileWrite (uint8_t* buf, uint32_t len) {
   uint32_t ofs = rwofs - (pt2 * block);
-  if (ofs < write_size) {
+  //if (ofs < write_size) {
     // TODO: zpresnit, kopiruje i kousek dal za konec souboru (asi nevadi)
     debug ("fileWrite -> offset=%d, len=%d\r", ofs, len);
     memory.writeBytes (buf, ofs, len);
-  }
+  //}
 }
 #ifdef __arm__
 void Fat12Emul::Save (const char * name) {};
