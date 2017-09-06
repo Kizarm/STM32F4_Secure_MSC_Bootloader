@@ -26,6 +26,8 @@ class ContextServer {
     /// Pomocné metody
     bool sendImage(int sockfd, const char * name);
     bool sendFile (int sockfd, const char * name);
+    bool sendFw   (int sockfd, const char * name);
+    bool sendSel  (int sockfd);
     void notFound (int sockfd);
   private:
     const char * root;

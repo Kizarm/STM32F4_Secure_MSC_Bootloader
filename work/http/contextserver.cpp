@@ -15,12 +15,20 @@
 #include "tea.h"
 #include "fwcheck.h"
 
+struct imageDesc {
+  const char * filename;
+  const char * descript;
+};
+/// Obrazy firmware
+static const imageDesc Images[] = {
+  {"../blik/firmware.bin", "Blikání modrou LEDkou"},
+  {"../midi/playmidi.bin", "Zjednodušený MIDI player (hudba z filmu Podraz)"},
+  {"../text/gsm.bin",      "Pan Werich čte Haškova Švejka (GSM komprese)"},
+  {0,0}
+};
 struct UUID {
   uint32_t part [TEA_KEY_SIZE];
 };
-/// Obraz firmware
-  static const char * image_file = "../midi/playmidi.bin";
-//static const char * image_file = "../blik/firmware.bin";
 /// Zaplaceno ...
 static const UUID payed [] = {  // UUID z STM32F4 (3*4 byte) + Flash size (4 byte)
   {0x001e0027, 0x33314718, 0x35373532, 0x00000400},
@@ -39,8 +47,34 @@ ContextServer::ContextServer (const char * r) : root(r) {
 ContextServer::~ContextServer() {
 
 }
+/* Takhle vyrábět a obsluhovat formulář je asi blbost, ale funguje to
+ * */
+bool ContextServer::sendSel (int sockfd) {
+  const unsigned ctxlen = 0x1000;
+  char ctxbuf [ctxlen];
+  unsigned n = 0, i = 0;
+  n += snprintf (ctxbuf + n, ctxlen - n, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n<html>\n<head>\n  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n"
+                                         "<title>SECURE BOOT</title>\n  <style type=\"text/css\"></style>\n</head>\n<body lang=\"cs-CZ\" dir=\"ltr\">\n<p>Zde si můžete něco vybrat:</p>\n");
+  n += snprintf (ctxbuf + n, ctxlen - n, "<FORM action=\"FIRMWARE.BIN\">\n  <SELECT name=\"volby\" size=1>\n");
+  for (;;) {
+    const char * filename = Images [i].filename;
+    if (!filename) break;
+    int res = access (filename, R_OK);
+    if (res) break;
+    const char * descript = Images [i].descript;
+    n += snprintf (ctxbuf + n, ctxlen - n, "    <OPTION value=%d> %s\n", i, descript);
+    i += 1;
+  }
+  n += snprintf (ctxbuf + n, ctxlen - n, "  </SELECT>\n  <INPUT name=\"ok\" type=submit value=\"Odeslat\">\n</FORM>\n</body>\n</html>\n");
+  send (sockfd, page_200, strlen(page_200), 0);
+  int txmit = write (sockfd, ctxbuf, n);
+  if (!txmit) fprintf (stderr, "No send data: %d\n", txmit);
+
+  return true;
+}
+
 bool ContextServer::path (int sockfd, char * rq) {
-  const unsigned maxmsg = 100000;
+  const unsigned maxmsg = 10000;
   char path [maxmsg];
   
   if (sendImage (sockfd, rq)) return true;
@@ -84,32 +118,48 @@ void ContextServer::notFound (int sockfd) {
 }
 
 bool ContextServer::sendImage (int sockfd, const char * name) {
-  int res = sscanf (name, "/%08X%08X%08X%08X/FIRMWARE.BIN", cuid.part + 0, cuid.part + 1, cuid.part + 2, cuid.part + 3);
-  if (res != TEA_KEY_SIZE) return false;
-  UUID uuid;
-  for (unsigned n=0; n<TEA_KEY_SIZE; n++) uuid.part[n] = cuid.part[n] ^ SecretKeys.server[n];
-  printf ("UUID: .part = { ");
-  for (unsigned n=0; n<TEA_KEY_SIZE; n++) printf ("0x%08x, ", uuid.part[n]);
-  printf ("}\n");
-  bool ok;
-  unsigned i, n, m = sizeof(payed) / sizeof(UUID);
-  for (i=0; i<m; i++) {
-    ok = true;
-    for (n=0; n<TEA_KEY_SIZE; n++) {
-      if (uuid.part[n] != payed[i].part[n]) {
-        ok = false; break;
+  bool ok = true;
+  const unsigned buflen = 0x400;
+  char strbuf [buflen];
+  int res = sscanf (name, "/%08X%08X%08X%08X/%s", cuid.part + 0, cuid.part + 1, cuid.part + 2, cuid.part + 3, strbuf);
+  if (res != TEA_KEY_SIZE + 1) return false;
+  printf ("REQUEST \"%s\"\n", strbuf);
+  if (!strcmp ("FIRMWARE.BIN", strbuf)) {
+    UUID uuid;
+    for (unsigned n=0; n<TEA_KEY_SIZE; n++) uuid.part[n] = cuid.part[n] ^ SecretKeys.server[n];
+    printf ("UUID: .part = { ");
+    for (unsigned n=0; n<TEA_KEY_SIZE; n++) printf ("0x%08x, ", uuid.part[n]);
+    printf ("}\n");
+    unsigned i, n, m = sizeof(payed) / sizeof(UUID);
+    for (i=0; i<m; i++) {
+      ok = true;
+      for (n=0; n<TEA_KEY_SIZE; n++) {
+        if (uuid.part[n] != payed[i].part[n]) {
+          ok = false; break;
+        }
       }
+      if (ok) break;
     }
-    if (ok) break;
+    if (!ok) {
+      sendFile(sockfd, "not_payed.html");
+      return true;
+    }
+    for (n=0; n<TEA_KEY_SIZE; n++) GeneratedKeys.loader[n] = uuid.part[n] ^ SecretKeys.loader[n];
+
+    ok = sendSel(sockfd);
+  } else {
+    unsigned value = 0;
+    res = sscanf (strbuf, "FIRMWARE.BIN?volby=%d&ok=Odeslat", &value);
+    if (res != 1) return false;
+    const char * name = Images[value].filename;
+    ok = sendFw (sockfd, name);
   }
-  if (!ok) {
-    sendFile(sockfd, "not_payed.html");
-    return true;
-  }
-  for (n=0; n<TEA_KEY_SIZE; n++) GeneratedKeys.loader[n] = uuid.part[n] ^ SecretKeys.loader[n];
-  
+  return ok;  
+}
+bool ContextServer::sendFw (int sockfd, const char * name) {
+  bool ok = true; int res;
   unsigned filesize = 0;
-  uint8_t * image = FwCheck (image_file, filesize);
+  uint8_t * image = FwCheck (name, filesize);
   if (!image) return false;
   
   encrypt_block (image, filesize, GeneratedKeys.loader);
@@ -130,7 +180,7 @@ bool ContextServer::sendImage (int sockfd, const char * name) {
     start  += chunk;
     lenght -= chunk;
   }
-  printf ("Request = [%s] -> %d, i=%d, ok=%d\n", name, filesize, i, ok);
   delete [] image;
+  printf ("Request = [%s] -> %d, ok=%d\n", name, filesize, ok);
   return ok;
 }
