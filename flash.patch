@@ -52,7 +52,7 @@ diff -Naur ./mscload_ram/work/boot/fat12emul.cpp ./mscload_flash/work/boot/fat12
      .Number_Of_FATs              = 1,
      .Maximum_Directory_Entries   = 16,
 -    .Total_Logical_Sectors       = 128,
-+    .Total_Logical_Sectors       = 1280,
++    .Total_Logical_Sectors       = 1286,
      .Media_Descriptor            = 0xF8,
      .Logical_Sectors_Per_FAT     = 2
    }

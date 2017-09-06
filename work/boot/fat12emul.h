@@ -31,10 +31,9 @@ class Fat12Emul : public StorageBase {
     uint32_t       rwofs;            //!< offset
     uint32_t       rwlen;            //!< délka
     uint32_t       pt0, pt1, pt2;    //!< záchytné body
-    uint32_t       write_size;
     uint32_t       full_size;
     
-    struct {    // 2 KiB data
+    struct {    // 2.5 KiB data
       uint8_t boot [512];   //!< boot sector
       uint8_t fat  [512*2]; //!< FAT tables block
       uint8_t dir  [512];   //!< DIRECTORY  block

@@ -7,11 +7,6 @@
 extern "C" char          image_ctxt [];
 extern "C" unsigned long image_size;
 
-static const unsigned maxsectors = 12;
-static const uint8_t  SectorSizes [] = {       // v KiB, celkem 1MiB, nulty zde budeme vynechavat = bootloader
-  16, 16, 16, 16, 64, 128, 128, 128, 128, 128, 128, 128
-};
-
 ImageWriter::ImageWriter() {
 }
 void ImageWriter::eraseBlocks (uint32_t from, uint32_t len) {

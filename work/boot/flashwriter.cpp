@@ -3,10 +3,7 @@
 #include "keys.h"
 #include "tea.h"
 #include "flash.h"
-/*
-#include "print.h"
-extern Print print;
-*/
+
 extern "C" char          image_ctxt [];
 extern "C" unsigned long image_size;
 
@@ -52,7 +49,6 @@ void ImageWriter::writeBytes (uint8_t * data, uint32_t from, uint32_t len) {
   if (FLASHClass::isLocked()) return; // chyba, ignoruj, ale nebude zapsano
   const uint32_t halfs = len >> 1;
   uint32_t address = (uint32_t) image_ctxt + from;
-//print << "Write " << address << EOL;
   uint16_t * towrite = (uint16_t*) tmp;
   for (unsigned n=0; n<halfs; n++) {
     FLASHClass::ProgramHalfWord (address, towrite[n]);

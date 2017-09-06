@@ -197,7 +197,7 @@ Fat12Emul::Fat12Emul () : StorageBase(), memory(), block (BootSector.BPB.Bytes_P
   rwlen = 0u;
   rwofs = 0u;
   capacity = BootSector.BPB.Total_Logical_Sectors;
-  write_size = full_size = 0u;
+  full_size = 0u;
   pt0 = pt1 = pt2 = 0u;
 }
 
@@ -219,7 +219,6 @@ void Fat12Emul::CmdWrite (uint32_t offset, uint32_t lenght) {
   }
   if (erase > 0) {
     memory.eraseBlocks (start, erase);
-    write_size = erase * block;
   }
 }
 uint32_t Fat12Emul::GetCapacity (void) {
@@ -330,8 +329,7 @@ void Fat12Emul::indxRead (uint8_t * buf, uint32_t len) {
 void Fat12Emul::fileRead (uint8_t * buf, uint32_t len) {
   uint32_t ofs = rwofs - (pt2 * block);
   if (ofs < image_size) {
-    // TODO: zpresnit, kopiruje i kousek dal za konec souboru (asi nevadi)
-    // debug ("offset=%d, len=%d\n", ofs, len);
+    debug ("fileRead  -> offset=%d, len=%d\r", ofs, len);
     memory.readBytes (buf, ofs, len);
   } else {
     memset (buf, 0, len);
@@ -373,11 +371,8 @@ void Fat12Emul::indxWrite (uint8_t* buf, uint32_t len) {
 }
 void Fat12Emul::fileWrite (uint8_t* buf, uint32_t len) {
   uint32_t ofs = rwofs - (pt2 * block);
-  //if (ofs < write_size) {
-    // TODO: zpresnit, kopiruje i kousek dal za konec souboru (asi nevadi)
-    debug ("fileWrite -> offset=%d, len=%d\r", ofs, len);
-    memory.writeBytes (buf, ofs, len);
-  //}
+  debug ("fileWrite -> offset=%d, len=%d\r", ofs, len);
+  memory.writeBytes (buf, ofs, len);
 }
 #ifdef __arm__
 void Fat12Emul::Save (const char * name) {};
