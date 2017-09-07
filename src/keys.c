@@ -15,7 +15,8 @@ struct UUID_s {
  * uuid  = {part = {0x001e_0027, 0x3331_4718, 0x3537_3532, 0x0000_0400}};
  * */
 static void xor_key (const uint32_t * inkey, uint32_t * outkey, struct UUID_s * u) {
-  for (unsigned n=0; n<UUID_SIZE; n++) outkey[n] = inkey[n] ^ u->part[n];
+  unsigned n;
+  for (n=0; n<UUID_SIZE; n++) outkey[n] = inkey[n] ^ u->part[n];
 }
 
 #ifdef __arm__
