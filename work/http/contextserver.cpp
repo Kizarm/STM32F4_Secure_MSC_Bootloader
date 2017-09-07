@@ -52,7 +52,7 @@ ContextServer::~ContextServer() {
 bool ContextServer::sendSel (int sockfd) {
   const unsigned ctxlen = 0x1000;
   char ctxbuf [ctxlen];
-  unsigned n = 0, i = 0;
+  unsigned n = 0, i = 0, cnt = 0;
   n += snprintf (ctxbuf + n, ctxlen - n, "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n<html>\n<head>\n  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n"
                                          "<title>SECURE BOOT</title>\n  <style type=\"text/css\"></style>\n</head>\n<body lang=\"cs-CZ\" dir=\"ltr\">\n<p>Zde si můžete něco vybrat:</p>\n");
   n += snprintf (ctxbuf + n, ctxlen - n, "<FORM action=\"FIRMWARE.BIN\">\n  <SELECT name=\"volby\" size=1>\n");
@@ -60,12 +60,21 @@ bool ContextServer::sendSel (int sockfd) {
     const char * filename = Images [i].filename;
     if (!filename) break;
     int res = access (filename, R_OK);
-    if (res) break;
-    const char * descript = Images [i].descript;
-    n += snprintf (ctxbuf + n, ctxlen - n, "    <OPTION value=%d> %s\n", i, descript);
+    if (!res) {
+      cnt += 1;
+      const char * descript = Images [i].descript;
+      n += snprintf (ctxbuf + n, ctxlen - n, "    <OPTION value=%d> %s\n", i, descript);
+    }
     i += 1;
   }
-  n += snprintf (ctxbuf + n, ctxlen - n, "  </SELECT>\n  <INPUT name=\"ok\" type=submit value=\"Odeslat\">\n</FORM>\n</body>\n</html>\n");
+  n += snprintf (ctxbuf + n, ctxlen - n, "  </SELECT>\n");
+  if (cnt) {
+    n += snprintf (ctxbuf + n, ctxlen - n, "  <INPUT name=\"ok\" type=submit value=\"Odeslat\">\n");
+    n += snprintf (ctxbuf + n, ctxlen - n, "</FORM>\n</body>\n</html>\n");
+    n += snprintf (ctxbuf + n, ctxlen - n, "<p>Stažený soubor normálně uložte. Do zařízení ho lze dostat přetažením, ale <b>soubor FIRMWARE.BIN v zařízení musíte předem smazat !</b></p>");
+    n += snprintf (ctxbuf + n, ctxlen - n, "<p><i>Pozn.: Smazání souboru v zařízení jen přepíše adresář, což nevadí, po RESETu se soubor opět objeví. "
+                                           "Pokud ho ale přepíšete třeba tím přetažením, je to nevratné. <b>Linuxový příkaz cp soubor FIRMWARE.BIN prostě přepíše, není nutné předem nic mazat.</b></i></p>");
+  }
   send (sockfd, page_200, strlen(page_200), 0);
   int txmit = write (sockfd, ctxbuf, n);
   if (!txmit) fprintf (stderr, "No send data: %d\n", txmit);

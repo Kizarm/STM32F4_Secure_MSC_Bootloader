@@ -49,3 +49,6 @@ podoby to převede software v adresáři post (blikání pro základní test v R
 HTTP server to ještě ke všemu zašifruje. Šifrování je v zásadě možné vypnout nebo změnit
 za lepší (AES...), je nutné tohle brát jako hrubou kostru, která v zásadě umožňuje
 platícímu zákazníkovi udělat upgrade firmware aniž by musel používat nějaký externí nástroj.
+
+Tento program je rozšiřován v naději, že bude užitečný, avšak BEZ JAKÉKOLIV ZÁRUKY. Neposkytují se ani odvozené záruky
+PRODEJNOSTI anebo VHODNOSTI PRO URČITÝ ÚČEL. Další podrobnosti hledejte v Obecné veřejné licenci GNU (http://www.gnugpl.cz/).
