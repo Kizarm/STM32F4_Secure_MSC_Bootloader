@@ -34,6 +34,11 @@ static inline void setAlt (const SpiPin & p) {
   GpioClass pin (p.port, p.no, GPIO_Mode_AF);
   pin.setAF     (p.alt);
 }
+static inline void setOut (const SpiPin & p) {
+  GpioClass pin (p.port, p.no, GPIO_Mode_AF);
+  pin.setAF     (p.alt);
+  pin.setPuPd   (GPIO_PuPd_UP);
+}
 
 SpiSimple::SpiSimple() : sel(GpioPortB, 12) {
   // Init(); // vola se externe
@@ -45,7 +50,7 @@ void SpiSimple::Init (void) {
   RCC->AHB1LPENR |= RCC_AHB1LPENR_GPIOBLPEN;
   setAlt (Pins.sck );
   setAlt (Pins.mosi);
-  setAlt (Pins.miso);
+  setOut (Pins.miso); // ! problem - mozna lepe hardware rezistor !
   /*
   GpioClass umiso (GpioPortB, 14, GPIO_Mode_AF);
   umiso.setAF     (5);
