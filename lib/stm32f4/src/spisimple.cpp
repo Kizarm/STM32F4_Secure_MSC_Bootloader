@@ -2,18 +2,6 @@
 #include "system_stm32f4xx.h"
 #include "spisimple.h"
 
-#include "storagemmc.h"
-/// pro pouziti ve spolupraci k MMC kartou
-extern StorageMmc * MmcInstance; 
-extern "C" void SysTick_Handler (void);
-
-void SysTick_Handler (void) {
-  // asm volatile ("bkpt 0");
-  if (MmcInstance)
-    MmcInstance->disk_timerproc();
-}
-//!///////////////////////////////////////
-
 struct SpiPin {
   GpioPortNum   port;
   uint8_t       no;

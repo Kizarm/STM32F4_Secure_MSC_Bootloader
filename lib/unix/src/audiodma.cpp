@@ -8,6 +8,10 @@
 static const char *device = "default";
 static snd_pcm_t  *handle;
 
+void PlatformExit (void) {
+}
+
+
 static int open_alsa_device (int channels, int srate) {
   int err;
   if ((err = snd_pcm_open(&handle, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
@@ -53,7 +57,8 @@ void AudioDma::Up (Sample * data, unsigned len) {
 
 AudioDma::AudioDma () {
   signal (SIGINT, sig_handler);
-  int res = open_alsa_device (2, 22050);
+  // int res = open_alsa_device (2, 22050);
+  int res = open_alsa_device (2, 44100);
   if (!res) {
     printf ("Nejde otevrit zvuk\n");
     return;

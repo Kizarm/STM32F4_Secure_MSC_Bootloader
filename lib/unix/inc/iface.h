@@ -47,7 +47,6 @@ class Interface {
     unsigned dlen;
     AudioDma * dac;
 };
-void PlatformExit (void) {
-}
+extern void PlatformExit (void);
 
 #endif //  INERFACE_H

@@ -2,6 +2,17 @@
 #include "debug.h"
 #include <msclass.h>
 
+#include "storagemmc.h"
+/// pro pouziti ve spolupraci k MMC kartou
+static StorageMmc * MmcInstance; 
+extern "C" void SysTick_Handler (void);
+
+void SysTick_Handler (void) {
+  if (MmcInstance)
+    MmcInstance->disk_timerproc();
+}
+//!///////////////////////////////////////
+
 
 /*! Results of Disk Functions */
 typedef enum {
@@ -46,8 +57,6 @@ typedef enum {
 static const uint32_t FreqLow  = 7; // ~ 160 kHz
 static const uint32_t FreqHigh = 2; // ~ 2.6 MHz
 */
-StorageMmc * MmcInstance = 0; 
-
 
 StorageMmc::StorageMmc () : spi(), block(512) {
   MmcInstance    = this;
