@@ -27,12 +27,12 @@ class Interface {
     void operator += (AudioDma & a) {
       dac = & a;
     }
-    void pass (mad_fixed_t const * left_ch, unsigned nsamples) {
+    void pass (mad_fixed_t const * left_ch, mad_fixed_t const * right_ch, unsigned nsamples) {
       Sample tmp [nsamples];
       for (unsigned n=0; n<nsamples; n++) {
         Sample s;
-        s.ss.l = scale (left_ch[n]);
-        s.ss.r = scale (left_ch[n]);
+        s.ss.l = scale (left_ch [n]);
+        s.ss.r = scale (right_ch[n]);
         tmp [n] = s;
       }
       dac->Up (tmp, nsamples);
@@ -41,10 +41,11 @@ class Interface {
       if (nsamples != dlen) {
         printf ("%d Channel(s), BitRate = %d, Data Size = %d\n", nchannels, brate, nsamples);
       }
-      dlen = nsamples;
+      dlen     = nsamples;
+      channels = nchannels;
     }
   private:
-    unsigned dlen;
+    unsigned dlen, channels;
     AudioDma * dac;
 };
 extern void PlatformExit (void);

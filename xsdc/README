@@ -21,3 +21,8 @@ byte - tady je odvozen ze struktury stream, snad správně).
 Player funguje i jako emulace na Linuxu s Alsa zvukem. Musí se ale
 vytvořit v podadresáři tmp obraz disku s FAT32 a mp3 soubory. To je
 hodně užitečné pro ladění - liší se jen konec připojený k hardware.
+
+15.09.2017 - přidáno stereo. Pro soubory s formátem mono funguje
+stejně jako předchozí verze, stereo je náročnější na paměť, takže
+je nutné to linkovat do flash, jinak se potká stack s .bss a celé
+to chcípne. Stejně by to chtělo udělat dynamickou analýzu stacku.

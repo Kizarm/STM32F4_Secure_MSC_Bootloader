@@ -83,7 +83,7 @@ enum mad_flow MiniMad::output (void * data,
   unsigned nsamples;
   unsigned nchannels, brate;
   mad_fixed_t const * left_ch;
-  // mad_fixed_t const * right_ch;
+  mad_fixed_t const * right_ch;
 
   // pcm->samplerate contains the sampling frequency
 
@@ -91,10 +91,14 @@ enum mad_flow MiniMad::output (void * data,
   nchannels = pcm->channels;
   nsamples  = pcm->length;
   left_ch   = pcm->samples[0];
-  //right_ch  = pcm->samples[1];
+  if (nchannels == 1) {           // mono
+    right_ch  = left_ch;
+  } else {                        // stereo
+    right_ch  = pcm->samples[1];
+  }
   ifc.blink (nchannels, brate, nsamples);
-  // funguje jen pro 1 kanal, ten vystup mad je divne proti vstupu alsa.
-  ifc.pass (left_ch, nsamples);
+  // ten vystup mad je divne proti vstupu alsa.
+  ifc.pass (left_ch, right_ch, nsamples);
 
   return MAD_FLOW_CONTINUE;
 }

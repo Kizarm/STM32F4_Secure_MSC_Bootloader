@@ -16,7 +16,7 @@ static inline int16_t scale (mad_fixed_t sample) {
        "M" (16), "M" (MAD_F_FRACBITS + 1 - 16));
   return __result;
 }
-// Jen pro fixní délku paketu 571 vzorků !!!
+// Jen pro fixní délku paketu 571 (1142) vzorků !!!
 class Interface : public OneWay {
   public:
     Interface () : OneWay(), ledb(GpioPortD, 15) { ready = false; };
@@ -25,15 +25,16 @@ class Interface : public OneWay {
       for (unsigned i=0; i<len; i++) {
         // Upravit a zkopírovat data
         Sample s;
-        s.ss.l = scale (ptr[i]);
-        s.ss.r = scale (ptr[i]);
+        s.ss.l = scale (l_ch[i]);
+        s.ss.r = scale (r_ch[i]);
         data [i] = s;
       }
       ready = true;     // můžou být další
       return len;
     }
-    void pass (mad_fixed_t const * data, unsigned len) {
-      ptr   = data;     // jen nastav pointer na data
+    void pass (mad_fixed_t const * left, mad_fixed_t const * right, unsigned len) {
+      l_ch  = left;     // jen nastav pointer na data
+      r_ch  = right;
       ready = false;
       while (!ready) {  // a čekej až se data odeberou metodou Up()
       };
@@ -42,7 +43,8 @@ class Interface : public OneWay {
       ~ledb;
     }
   private:
-    mad_fixed_t const * ptr;
+    mad_fixed_t const * l_ch;
+    mad_fixed_t const * r_ch;
     volatile bool       ready;
     GpioClass           ledb;
 };
