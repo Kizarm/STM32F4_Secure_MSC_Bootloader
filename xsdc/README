@@ -1,0 +1,23 @@
+Tohle jsem sem přidal, protože to trochu souvisí s FAT.
+Adresáře
+    card - funguje jen na Discovery kitu, musí se připojit nějaká
+SDC nebo MMC karta přes SPI2 podle připojeného obrázku. Firmware
+pak funguje jako USB MSC s kartou jako úložištěm. Na FS je to trochu
+pomalé a když je karta větší, dost dlouho trvá než se vůbec připojí.
+Pomocí tohoto lze kartu inicializovat a nakopírovat na ní soubory.
+
+    play - mp3 player, hrající právě z této připojené karty všechny
+soubory s příponou .mp3. Tlačítkem na kitu lze soubor přeskočit.
+Je to jen pro vyzkoušení, že to jde udělat softwarovým způsobem z
+otevřených zdrojů. STM32F4xx má verzi, kde je player zabudován jako
+knihovna přímo do ROM procesoru. Nakonec když koukneme jak je to
+složité a nenažrané a uvážíme, že karta s 8GB je za pár šupů, je asi
+lépe přehrávat přímé vzorky PCM z karty. Takže to není úplně dodělané,
+musí být pevný formát MP3 (vzorkování 44100Hz, mono) aby to správně
+přehrávalo. Stereo jsem nezkoušel. Použitá knihovna MAD je sice malá,
+ale má dost nešikovné API (nebo jsem ho nepochopil, bídná dokumentace,
+předpokládám, že funkce pro input by měla vracet počet zpracovaných
+byte - tady je odvozen ze struktury stream, snad správně).
+Player funguje i jako emulace na Linuxu s Alsa zvukem. Musí se ale
+vytvořit v podadresáři tmp obraz disku s FAT32 a mp3 soubory. To je
+hodně užitečné pro ladění - liší se jen konec připojený k hardware.
