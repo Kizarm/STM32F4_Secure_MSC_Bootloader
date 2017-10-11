@@ -14,7 +14,7 @@ endif
 
 VPATH = . $(ROOT_PATH)/lib/src
 
-include $(ROOT_PATH)/lib/$(TARGET)/makefile.inc
+include $(ROOT_PATH)/lib/$(TARGET)/play.inc
 OBJS  = $(OBJM)
 
 # C++ files

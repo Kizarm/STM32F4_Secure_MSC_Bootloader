@@ -1,7 +1,6 @@
 #include "fat32ro.h"
 #include "diskfile.h"
 #include "minimad.h"
-//#include <stdio.h>
 
 static GpioClass ledg (GpioPortD, 12);
 static AudioDma  dac;
@@ -17,7 +16,7 @@ static MiniMad   mad;
  * t.j. FAT musí být 32-bitová, blok má přesnou délku 512 B, cluster je 8 bloků
  * 
  * Pro mp3 soubor to umí sáhnout do podadresáře, ale rekurze rychle spotřebuje RAM.
- * Formát mp3 je pevný 16-bit sample, mono, 44100 Hz (64KB/s), dá se do toho sáhnout
+ * Formát mp3 je pevný 16-bit sample, mono/stereo, 44100 Hz (64KB/s), dá se do toho sáhnout
  * a parametry změnit. Úplný přehrávač dělat nebudu, chtěl jsem jen vyzkoušet, že to hraje,
  * procesor to stíhá a ta knihovna mad není právě vhodná pro spolupráci s kartou,
  * původně to bylo mapování souboru do paměti, což zde nelze. Jde to očůrat, ale dost
